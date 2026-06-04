@@ -82,7 +82,7 @@ public class ProdutoRepository : IProdutoRepository
     public void Update(Produto produto)
     {
         // TODO: Marque o produto como modificado no contexto (sem salvar ainda).
-        throw new NotImplementedException();
+        _context.Produtos.Update(produto);
     }
 
     public async Task<bool> SaveChangesAsync()

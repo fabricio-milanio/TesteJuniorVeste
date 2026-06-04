@@ -69,11 +69,59 @@ public class ProdutoService : IProdutoService
         return CommandResult<ProdutoDto>.Success(productDto);
     }
 
-    public Task<CommandResult<ProdutoDto>> CreateAsync(CreateProdutoDto dto)
+    public async Task<CommandResult<ProdutoDto>> CreateAsync(CreateProdutoDto dto)
     {
         // TODO: Valide os campos (regras 1 e 2), verifique duplicidade de nome (regra 3)
         //       e persista o novo produto.
-        throw new NotImplementedException();
+        
+        if (string.IsNullOrWhiteSpace(dto.Nome))
+        {
+            _notifications.AddNotification("O nome do produto é obrigatório.");
+        }
+        else if (dto.Nome.Length > 100)
+        {
+            _notifications.AddNotification("O nome do produto deve ter no máximo 100 caracteres.");
+        }
+        
+        if (dto.Preco <= 0)
+        {
+            _notifications.AddNotification("O preço do produto deve ser maior que zero.");
+        }
+        
+        if (_notifications.HasNotifications)
+        {
+            return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
+        }
+        
+        var duplicateName = await _repository.ExistsWithNameAsync(dto.Nome);
+        if (duplicateName)
+        {
+            _notifications.AddNotification("Já existe um produto cadastrado com este nome.");
+            return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
+        }
+        
+        var product = new Produto
+        {
+            Nome = dto.Nome,
+            Descricao = dto.Descricao,
+            Preco = dto.Preco,
+            Estoque = dto.Estoque,
+            CategoriaId = dto.CategoriaId
+        };
+
+        await _repository.AddAsync(product);
+        
+        var success = await _repository.SaveChangesAsync();
+
+        if (!success)
+        {
+            _notifications.AddNotification("Não foi possível salvar o produto.");
+            return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
+        }
+        
+        var productDto = MapToDto(product);
+        
+        return CommandResult<ProdutoDto>.Success(productDto);
     }
 
     public Task<CommandResult<ProdutoDto>> UpdateAsync(int id, UpdateProdutoDto dto)

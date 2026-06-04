@@ -41,6 +41,20 @@ public class ProdutosController : ControllerBase
 
     // TODO: GET /api/produtos?pagina=1&tamanhoPagina=10
     // Use [FromQuery] para receber os parâmetros de paginação com valores padrão.
+    [HttpGet]
+    [ProducesResponseType(typeof(CommandResult<PagedResult<ProdutoDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAll([FromQuery] int pagina = 1, [FromQuery] int tamanhoPagina = 5)
+    {
+        var result = await _service.GetAllAsync(pagina, tamanhoPagina);
+        
+        if (!result.Succeeded)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
 
     // TODO: GET /api/produtos/{id}
 

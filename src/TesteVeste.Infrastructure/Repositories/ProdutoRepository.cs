@@ -59,6 +59,7 @@ public class ProdutoRepository : IProdutoRepository
         //       Retorne null se não encontrado.
         var product = await _context.Produtos
             .Include(produto => produto.Categoria)
+            .AsNoTracking()
             .FirstOrDefaultAsync(produto => produto.Id == id);
 
         return product;

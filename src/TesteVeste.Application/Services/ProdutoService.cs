@@ -52,11 +52,21 @@ public class ProdutoService : IProdutoService
         return CommandResult<PagedResult<ProdutoDto>>.Success(pagedDtoResult);
     }
 
-    public Task<CommandResult<ProdutoDto>> GetByIdAsync(int id)
+    public async Task<CommandResult<ProdutoDto>> GetByIdAsync(int id)
     {
         // TODO: Busque o produto pelo Id.
         //       Se não existir, adicione uma notificação e retorne Failure.
-        throw new NotImplementedException();
+        var product = await  _repository.GetByIdAsync(id);
+
+        if (product == null)
+        {
+            _notifications.AddNotification("Produto não encontrado");
+            return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
+        }
+        
+        var productDto =  MapToDto(product);
+        
+        return CommandResult<ProdutoDto>.Success(productDto);
     }
 
     public Task<CommandResult<ProdutoDto>> CreateAsync(CreateProdutoDto dto)

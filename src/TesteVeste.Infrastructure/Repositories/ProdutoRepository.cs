@@ -29,11 +29,28 @@ public class ProdutoRepository : IProdutoRepository
         _context = context;
     }
 
-    public Task<PagedResult<Produto>> GetAllAsync(int pagina, int tamanhoPagina)
+    public async Task<PagedResult<Produto>> GetAllAsync(int pagina, int tamanhoPagina)
     {
         // TODO: Retorne os produtos paginados incluindo a Categoria.
         //       Construa um PagedResult<Produto> com Pagina, TamanhoPagina, TotalItens e Itens.
-        throw new NotImplementedException();
+        var query = _context.Produtos
+            .Include(produto => produto.Categoria)
+            .AsNoTracking();
+        
+        var totalItens = await query.CountAsync();
+
+        var itens = await query
+            .Skip((pagina - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToListAsync();
+        
+        return new PagedResult<Produto>
+        {
+            Itens = itens,
+            TotalItens = totalItens,
+            Pagina = pagina,
+            TamanhoPagina = tamanhoPagina
+        };
     }
 
     public Task<Produto?> GetByIdAsync(int id)

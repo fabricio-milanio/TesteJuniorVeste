@@ -124,12 +124,70 @@ public class ProdutoService : IProdutoService
         return CommandResult<ProdutoDto>.Success(productDto);
     }
 
-    public Task<CommandResult<ProdutoDto>> UpdateAsync(int id, UpdateProdutoDto dto)
+    public async Task<CommandResult<ProdutoDto>> UpdateAsync(int id, UpdateProdutoDto dto)
     {
         // TODO: Busque o produto, valide se está ativo (regra 4),
         //       valide os campos (regras 1 e 2), verifique duplicidade (regra 3)
         //       e salve as alterações.
-        throw new NotImplementedException();
+        
+        var existingProduct = await _repository.GetByIdAsync(id);
+        
+        if (existingProduct is null)
+        {
+            _notifications.AddNotification("Produto não encontrado.");
+            return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
+        }
+        
+        if (!existingProduct.Ativo)
+        {
+            _notifications.AddNotification("Produto inativo não pode ser editado.");
+            return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
+        }
+        
+        if (string.IsNullOrWhiteSpace(dto.Nome))
+        {
+            _notifications.AddNotification("O nome do produto é obrigatório.");
+        }
+        else if (dto.Nome.Length > 100)
+        {
+            _notifications.AddNotification("O nome do produto deve ter no máximo 100 caracteres.");
+        }
+        
+        if (dto.Preco <= 0)
+        {
+            _notifications.AddNotification("O preço do produto deve ser maior que zero.");
+        }
+
+        if (_notifications.HasNotifications)
+        {
+            return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
+        }
+        
+        var duplicateName = await _repository.ExistsWithNameAsync(dto.Nome, id);
+        
+        if (duplicateName)
+        {
+            _notifications.AddNotification("Já existe um produto cadastrado com este nome.");
+            return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
+        }
+        
+        existingProduct.Nome = dto.Nome;
+        existingProduct.Descricao = dto.Descricao;
+        existingProduct.Preco = dto.Preco;
+        existingProduct.Estoque = dto.Estoque;
+        existingProduct.CategoriaId = dto.CategoriaId;
+        
+        _repository.Update(existingProduct);
+        
+        var success = await _repository.SaveChangesAsync();
+        
+        if (success)
+        {
+            return CommandResult<ProdutoDto>.Success(MapToDto(existingProduct));
+        }
+
+        _notifications.AddNotification("Não foi possível salvar as alterações do produto.");
+        return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
     }
 
     public Task<CommandResult<bool>> DeleteAsync(int id)

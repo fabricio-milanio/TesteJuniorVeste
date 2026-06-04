@@ -74,21 +74,7 @@ public class ProdutoService : IProdutoService
         // TODO: Valide os campos (regras 1 e 2), verifique duplicidade de nome (regra 3)
         //       e persista o novo produto.
         
-        if (string.IsNullOrWhiteSpace(dto.Nome))
-        {
-            _notifications.AddNotification("O nome do produto é obrigatório.");
-        }
-        else if (dto.Nome.Length > 100)
-        {
-            _notifications.AddNotification("O nome do produto deve ter no máximo 100 caracteres.");
-        }
-        
-        if (dto.Preco <= 0)
-        {
-            _notifications.AddNotification("O preço do produto deve ser maior que zero.");
-        }
-        
-        if (_notifications.HasNotifications)
+        if (!ValidateStructuralFields(dto.Nome, dto.Preco))
         {
             return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
         }
@@ -144,21 +130,7 @@ public class ProdutoService : IProdutoService
             return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
         }
         
-        if (string.IsNullOrWhiteSpace(dto.Nome))
-        {
-            _notifications.AddNotification("O nome do produto é obrigatório.");
-        }
-        else if (dto.Nome.Length > 100)
-        {
-            _notifications.AddNotification("O nome do produto deve ter no máximo 100 caracteres.");
-        }
-        
-        if (dto.Preco <= 0)
-        {
-            _notifications.AddNotification("O preço do produto deve ser maior que zero.");
-        }
-
-        if (_notifications.HasNotifications)
+        if (!ValidateStructuralFields(dto.Nome, dto.Preco))
         {
             return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
         }
@@ -216,6 +188,25 @@ public class ProdutoService : IProdutoService
 
         _notifications.AddNotification("Não foi possível realizar a exclusão lógica do produto.");
         return CommandResult<bool>.Failure(_notifications.Notifications);
+    }
+    
+    private bool ValidateStructuralFields(string name, decimal price)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            _notifications.AddNotification("O nome do produto é obrigatório.");
+        }
+        else if (name.Length > 100)
+        {
+            _notifications.AddNotification("O nome do produto deve ter no máximo 100 caracteres.");
+        }
+
+        if (price <= 0)
+        {
+            _notifications.AddNotification("O preço do produto deve ser maior que zero.");
+        }
+
+        return !_notifications.HasNotifications;
     }
     
     private static ProdutoDto MapToDto(Produto produto)

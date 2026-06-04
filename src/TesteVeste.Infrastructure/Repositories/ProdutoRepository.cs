@@ -64,17 +64,19 @@ public class ProdutoRepository : IProdutoRepository
         return product;
     }
 
-    public Task<bool> ExistsWithNameAsync(string nome, int? excludeId = null)
+    public async Task<bool> ExistsWithNameAsync(string nome, int? excludeId = null)
     {
         // TODO: Retorne true se já existir um produto com o mesmo nome.
         //       Ignore o produto com Id == excludeId (usado ao atualizar).
-        throw new NotImplementedException();
+        return await _context.Produtos
+            .AnyAsync(product => product.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase) 
+                                 && (!excludeId.HasValue || product.Id != excludeId.Value));
     }
 
-    public Task AddAsync(Produto produto)
+    public async Task AddAsync(Produto produto)
     {
         // TODO: Adicione o produto ao contexto (sem salvar ainda).
-        throw new NotImplementedException();
+        await _context.Produtos.AddAsync(produto);
     }
 
     public void Update(Produto produto)
@@ -83,9 +85,9 @@ public class ProdutoRepository : IProdutoRepository
         throw new NotImplementedException();
     }
 
-    public Task<bool> SaveChangesAsync()
+    public async Task<bool> SaveChangesAsync()
     {
         // TODO: Salve as alterações e retorne true se ao menos uma linha foi afetada.
-        throw new NotImplementedException();
+        return await _context.SaveChangesAsync() > 0;
     }
 }

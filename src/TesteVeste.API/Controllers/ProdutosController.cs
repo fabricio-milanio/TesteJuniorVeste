@@ -105,4 +105,19 @@ public class ProdutosController : ControllerBase
 
     // TODO: DELETE /api/produtos/{id}
     // Retorne 204 No Content em caso de sucesso.
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(typeof(CommandResult<ProdutoDto>), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Delete([FromRoute] int id)
+    {
+        var result = await _service.DeleteAsync(id);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result);
+        }
+
+        return NoContent();
+    }
+    
 }

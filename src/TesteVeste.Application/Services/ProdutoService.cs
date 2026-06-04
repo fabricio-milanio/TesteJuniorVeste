@@ -34,11 +34,22 @@ public class ProdutoService : IProdutoService
         _repository = repository;
         _notifications = notifications;
     }
-
-    public Task<CommandResult<PagedResult<ProdutoDto>>> GetAllAsync(int pagina, int tamanhoPagina)
+    
+    public async Task<CommandResult<PagedResult<ProdutoDto>>> GetAllAsync(int pagina, int tamanhoPagina)
     {
-        // TODO: Busque os produtos paginados no repositório e mapeie para ProdutoDto.
-        throw new NotImplementedException();
+        var pagedResult = await _repository.GetAllAsync(pagina, tamanhoPagina);
+        
+        var dtos = pagedResult.Itens.Select(MapToDto).ToList();
+        
+        var pagedDtoResult = new PagedResult<ProdutoDto>
+        {
+            Pagina = pagedResult.Pagina,
+            TamanhoPagina = pagedResult.TamanhoPagina,
+            TotalItens = pagedResult.TotalItens,
+            Itens = dtos
+        };
+        
+        return CommandResult<PagedResult<ProdutoDto>>.Success(pagedDtoResult);
     }
 
     public Task<CommandResult<ProdutoDto>> GetByIdAsync(int id)
@@ -68,5 +79,21 @@ public class ProdutoService : IProdutoService
         // TODO: Busque o produto. Se não existir, retorne Failure.
         //       Caso contrário, defina Ativo = false e salve (regra 5).
         throw new NotImplementedException();
+    }
+    
+    private static ProdutoDto MapToDto(Produto produto)
+    {
+        return new ProdutoDto
+        {
+            Id = produto.Id,
+            Nome = produto.Nome,
+            Descricao = produto.Descricao,
+            Preco = produto.Preco,
+            Estoque = produto.Estoque,
+            Ativo = produto.Ativo,
+            DataCadastro = produto.DataCadastro,
+            CategoriaId = produto.CategoriaId,
+            CategoriaNome = produto.Categoria?.Nome
+        };
     }
 }

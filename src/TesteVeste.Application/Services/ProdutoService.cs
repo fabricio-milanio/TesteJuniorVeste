@@ -190,11 +190,32 @@ public class ProdutoService : IProdutoService
         return CommandResult<ProdutoDto>.Failure(_notifications.Notifications);
     }
 
-    public Task<CommandResult<bool>> DeleteAsync(int id)
+    public async Task<CommandResult<bool>> DeleteAsync(int id)
     {
         // TODO: Busque o produto. Se não existir, retorne Failure.
         //       Caso contrário, defina Ativo = false e salve (regra 5).
-        throw new NotImplementedException();
+        
+        var product = await _repository.GetByIdAsync(id);
+        
+        if (product is null)
+        {
+            _notifications.AddNotification("Produto não encontrado.");
+            return CommandResult<bool>.Failure(_notifications.Notifications);
+        }
+        
+        product.Ativo = false;
+        
+        _repository.Update(product);
+    
+        var success = await _repository.SaveChangesAsync();
+        
+        if (success)
+        {
+            return CommandResult<bool>.Success(true);
+        }
+
+        _notifications.AddNotification("Não foi possível realizar a exclusão lógica do produto.");
+        return CommandResult<bool>.Failure(_notifications.Notifications);
     }
     
     private static ProdutoDto MapToDto(Produto produto)

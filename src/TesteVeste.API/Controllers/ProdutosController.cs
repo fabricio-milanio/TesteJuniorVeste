@@ -90,6 +90,18 @@ public class ProdutosController : ControllerBase
 
     // TODO: PUT /api/produtos/{id}
     // Receba um UpdateProdutoDto no body ([FromBody]).
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(CommandResult<ProdutoDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateProdutoDto product)
+    {
+        var result = await _service.UpdateAsync(id, product);
+
+        if (!result.Succeeded)
+            return BadRequest(result);
+
+        return Ok(result);
+    }
 
     // TODO: DELETE /api/produtos/{id}
     // Retorne 204 No Content em caso de sucesso.

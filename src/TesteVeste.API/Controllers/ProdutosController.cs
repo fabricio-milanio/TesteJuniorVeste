@@ -73,6 +73,20 @@ public class ProdutosController : ControllerBase
 
     // TODO: POST /api/produtos
     // Receba um CreateProdutoDto no body ([FromBody]) e retorne 201 Created em sucesso.
+    [HttpPost]
+    [ProducesResponseType(typeof(CommandResult<ProdutoDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Create([FromBody] CreateProdutoDto product)
+    {
+        var result = await _service.CreateAsync(product);
+
+        if (!result.Succeeded || result.Data == null)
+            return BadRequest(result);
+        
+        return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result);
+    }
+    
 
     // TODO: PUT /api/produtos/{id}
     // Receba um UpdateProdutoDto no body ([FromBody]).

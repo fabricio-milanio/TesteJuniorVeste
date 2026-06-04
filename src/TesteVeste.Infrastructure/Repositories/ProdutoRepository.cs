@@ -53,11 +53,15 @@ public class ProdutoRepository : IProdutoRepository
         };
     }
 
-    public Task<Produto?> GetByIdAsync(int id)
+    public async Task<Produto?> GetByIdAsync(int id)
     {
         // TODO: Retorne o produto pelo Id incluindo a Categoria.
         //       Retorne null se não encontrado.
-        throw new NotImplementedException();
+        var product = await _context.Produtos
+            .Include(produto => produto.Categoria)
+            .FirstOrDefaultAsync(produto => produto.Id == id);
+
+        return product;
     }
 
     public Task<bool> ExistsWithNameAsync(string nome, int? excludeId = null)

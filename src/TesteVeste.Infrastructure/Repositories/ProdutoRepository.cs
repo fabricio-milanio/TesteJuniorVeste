@@ -29,42 +29,66 @@ public class ProdutoRepository : IProdutoRepository
         _context = context;
     }
 
-    public Task<PagedResult<Produto>> GetAllAsync(int pagina, int tamanhoPagina)
+    public async Task<PagedResult<Produto>> GetAllAsync(int pagina, int tamanhoPagina)
     {
         // TODO: Retorne os produtos paginados incluindo a Categoria.
         //       Construa um PagedResult<Produto> com Pagina, TamanhoPagina, TotalItens e Itens.
-        throw new NotImplementedException();
+        var query = _context.Produtos
+            .Include(produto => produto.Categoria)
+            .AsNoTracking();
+        
+        var totalItens = await query.CountAsync();
+
+        var itens = await query
+            .Skip((pagina - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToListAsync();
+        
+        return new PagedResult<Produto>
+        {
+            Itens = itens,
+            TotalItens = totalItens,
+            Pagina = pagina,
+            TamanhoPagina = tamanhoPagina
+        };
     }
 
-    public Task<Produto?> GetByIdAsync(int id)
+    public async Task<Produto?> GetByIdAsync(int id)
     {
         // TODO: Retorne o produto pelo Id incluindo a Categoria.
         //       Retorne null se não encontrado.
-        throw new NotImplementedException();
+        var product = await _context.Produtos
+            .Include(produto => produto.Categoria)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(produto => produto.Id == id);
+
+        return product;
     }
 
-    public Task<bool> ExistsWithNameAsync(string nome, int? excludeId = null)
+    public async Task<bool> ExistsWithNameAsync(string nome, int? excludeId = null)
     {
         // TODO: Retorne true se já existir um produto com o mesmo nome.
         //       Ignore o produto com Id == excludeId (usado ao atualizar).
-        throw new NotImplementedException();
+        return await _context.Produtos
+            .AnyAsync(product => product.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase) 
+                                 && (!excludeId.HasValue || product.Id != excludeId.Value));
     }
 
-    public Task AddAsync(Produto produto)
+    public async Task AddAsync(Produto produto)
     {
         // TODO: Adicione o produto ao contexto (sem salvar ainda).
-        throw new NotImplementedException();
+        await _context.Produtos.AddAsync(produto);
     }
 
     public void Update(Produto produto)
     {
         // TODO: Marque o produto como modificado no contexto (sem salvar ainda).
-        throw new NotImplementedException();
+        _context.Produtos.Update(produto);
     }
 
-    public Task<bool> SaveChangesAsync()
+    public async Task<bool> SaveChangesAsync()
     {
         // TODO: Salve as alterações e retorne true se ao menos uma linha foi afetada.
-        throw new NotImplementedException();
+        return await _context.SaveChangesAsync() > 0;
     }
 }
